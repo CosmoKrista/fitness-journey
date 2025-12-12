@@ -1,8 +1,9 @@
-const CACHE_NAME = "fitness-journey-v2";
+const CACHE_NAME = "fitness-journey-v3";
 const ASSETS = [
   "./",
   "./fitness.html",
   "./manifest.json",
+  "./service-worker.js",
   "./icon-192.png",
   "./icon-512.png"
 ];
