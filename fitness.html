@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Fitness Journey</title>
+  <meta name="viewport"
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b4f9b"> content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      /* theme variables – changed by JS */
+      --accent-main: #1b4f9b;
+      --accent-strong: #e53935;
+      --accent-soft-bg: #e3f0ff;
+      --accent-soft-border: #1b4f9b;
+      /* board / wall defaults */
+      --wall-bg: #d4d7dd;
+      --board-bg: #fdfdfd;
+      --board-border: #f0f0f0;
+      --board-shadow: 0 0 0 3px #c8ccd2, 0 12px 20px rgba(0,0,0,0.25);
+      --text-main: #222;
+    }
+
+    /* Overall page */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: var(--wall-bg);
+      color: var(--text-main);
+    }
+
+    /* Whiteboard frame */
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--board-bg);
+      border-radius: 18px;
+      border: 6px solid var(--board-border);
+      box-shadow: var(--board-shadow);
+      padding: 1rem 1.1rem 1.2rem;
+      position: relative;
+    }
+
+    /* Fake screws in corners */
+    .app::before,
+    .app::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #9aa0ac;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #b4bac5);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .app::before { top: 6px; left: 10px; }
+    .app::after { top: 6px; right: 10px; }
+
+    h1 {
+      text-align: center;
+      margin: 0.3rem 0 0.4rem;
+      font-size: 1.6rem;
+      color: var(--accent-main);
+      letter-spacing: 0.03em;
+    }
+
+    .day-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .day-nav-center {
+      flex: 1;
+    }
+
+    button.nav-arrow {
+      background: #ffffff;
+      color: #444;
+      border: 1px solid #c3c6cf;
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin-top: 0;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    button.nav-arrow:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .day-number {
+      font-size: 2.3rem;
+      text-align: center;
+      color: var(--accent-strong);
+      font-weight: 800;
+      margin-top: 0.1rem;
+    }
+
+    .sub {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.1rem;
+      cursor: pointer;
+    }
+
+    .reminder {
+      margin: 0.2rem auto 0.35rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 999px;
+      border: 1px dashed #f6a623;
+      background: #fff8e5;
+      color: #7a4b00;
+      font-size: 0.8rem;
+      text-align: center;
+      min-height: 1.1rem;
+    }
+
+    .section {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 0.7rem;
+      margin-top: 0.7rem;
+    }
+    .section:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0.1rem;
+    }
+
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #333;
+    }
+
+    label {
+      font-size: 0.95rem;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0.25rem 0;
+      gap: 0.5rem;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+
+    input[type="number"],
+    input[type="date"],
+    input[type="month"],
+    input[type="time"],
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.35rem 0.4rem;
+      border-radius: 6px;
+      border: 1px solid #c3c6cf;
+      background: #ffffff;
+      color: #222;
+      box-sizing: border-box;
+      font-size: 0.9rem;
+    }
+
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    input[type="month"]:focus,
+    input[type="time"]:focus,
+    input[type="text"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent-main);
+      box-shadow: 0 0 0 1px rgba(27,79,155,0.3);
+    }
+
+    textarea {
+      height: 70px;
+      resize: vertical;
+    }
+
+    .inline-input {
+      max-width: 120px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid #cfd2dc;
+      font-size: 0.75rem;
+      color: #555;
+      margin-left: 0.25rem;
+      background: #ffffff;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: var(--accent-main);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    button.secondary {
+      background: #ffffff;
+      color: #444;
+      border: 1px solid #c3c6cf;
+    }
+    button.small {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    /* small arrow buttons (calendar + sections) */
+    .calendar-toggle {
+      padding: 0.1rem 0.4rem;
+      font-size: 0.75rem;
+      line-height: 1;
+      margin-top: 0;
+    }
+
+    details {
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      padding: 0.5rem 0.7rem;
+      background: #fbfbfb;
+      margin-bottom: 0.75rem;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      list-style: none;
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    .summary-arrow::before {
+      content: "⚙ ";
+      color: #555;
+    }
+
+    .week-list {
+      font-size: 0.85rem;
+      margin-top: 0.35rem;
+    }
+    .week-list div {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 0.75rem;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.35rem;
+    }
+
+    .badge {
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #cfd2dc;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      white-space: nowrap;
+    }
+
+    .badge .icon {
+      font-size: 0.9rem;
+    }
+
+    .badge.highlight {
+      border-color: var(--accent-soft-border);
+      background: var(--accent-soft-bg);
+      color: var(--accent-soft-border);
+    }
+
+    .dashboard {
+      font-size: 0.85rem;
+      display: grid;
+      row-gap: 0.2rem;
+    }
+    .dashboard-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .dashboard-label {
+      color: #555;
+    }
+    .dashboard-value {
+      font-weight: 600;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      background: #ffffff;
+      margin-top: 0.3rem;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 0.1rem;
+    }
+
+    /* Emoji & wellness */
+    .emoji-row {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: nowrap;
+    }
+    .emoji-button {
+      border-radius: 999px;
+      border: 1px solid #cfd2dc;
+      background: #ffffff;
+      padding: 0.15rem 0.35rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .emoji-button.selected {
+      border-color: var(--accent-soft-border);
+      background: var(--accent-soft-bg);
+    }
+
+    .droplet-row {
+      display: flex;
+      gap: 0.15rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.2rem;
+    }
+    .droplet {
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.25;
+      transition: opacity 0.15s ease;
+    }
+    .droplet.active {
+      opacity: 1;
+    }
+
+    /* Calendar */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+      margin-top: 0.35rem;
+      font-size: 0.75rem;
+    }
+    .calendar-dow {
+      text-align: center;
+      font-weight: 600;
+      color: #555;
+    }
+    .day-cell {
+      min-height: 24px;
+      text-align: center;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      padding: 0.15rem 0;
+    }
+    .day-cell.empty {
+      cursor: default;
+    }
+    .day-cell.logged {
+      border-color: #cfd2dc;
+      background: #ffffff;
+    }
+    .day-cell.weighin {
+      border-style: dashed;
+      border-color: var(--accent-main);
+    }
+    .day-cell.today {
+      border-color: var(--accent-strong);
+    }
+    .day-cell.selected {
+      background: var(--accent-soft-bg);
+      border-color: var(--accent-soft-border);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Fitness Journey</h1>
+    <div class="day-nav">
+      <button id="prevDayBtn" class="nav-arrow">&#9664;</button>
+      <div class="day-nav-center">
+        <div class="day-number" id="dayNumber">Day ?</div>
+        <div class="sub" id="dateLabel" title="Tap to show/hide calendar"></div>
+      </div>
+      <button id="nextDayBtn" class="nav-arrow">&#9654;</button>
+    </div>
+    <div class="reminder" id="reminderBanner"></div>
+
+    <!-- SETTINGS (top) -->
+    <details>
+      <summary class="summary-arrow">Settings</summary>
+      <div class="section">
+        <div class="section-title">Journey settings</div>
+        <div class="row">
+          <label for="startDate">Start date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="row">
+          <label for="goalWeight">Goal weight (lbs)</label>
+          <input type="number" id="goalWeight" class="inline-input" min="0" step="0.1">
+        </div>
+        <div class="row">
+          <label>Eating window</label>
+          <div style="display:flex;gap:0.25rem;align-items:center;">
+            <input type="time" id="eatStart" class="inline-input">
+            <span>to</span>
+            <input type="time" id="eatEnd" class="inline-input">
+          </div>
+        </div>
+        <div class="row">
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect" class="inline-input">
+            <option value="blue">Blue marker</option>
+            <option value="purple">Purple marker</option>
+            <option value="pink">Pink marker</option>
+            <option value="teal">Teal marker</option>
+            <option value="green">Green marker</option>
+            <option value="yellow">Yellow marker</option>
+            <option value="red">Red marker</option>
+            <option value="orange">Orange marker</option>
+            <option value="rainbow">Rainbow</option>
+            <option value="corkboard">Corkboard</option>
+            <option value="neon">Neon</option>
+            <option value="chalkboard">Chalkboard</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="timeFormatSelect">Time format</label>
+          <select id="timeFormatSelect" class="inline-input">
+            <option value="auto">Auto (device)</option>
+            <option value="12">12-hour</option>
+            <option value="24">24-hour</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Exercise types</div>
+        <small>You can use commas OR put one name per line (for example: Walk, Strength, Yoga).</small>
+        <textarea id="exerciseNames"></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Supplements</div>
+        <small>You can use commas OR put one name per line.</small>
+        <textarea id="supplementNames"></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Data</div>
+        <button id="exportBtn" class="secondary">Export backup</button>
+        <button id="importBtn" class="secondary">Import backup</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+      </div>
+
+      <button id="saveSettingsBtn">Save settings</button>
+      <button id="resetAllBtn" class="secondary">Reset everything</button>
+    </details>
+
+    <!-- CALENDAR -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Calendar</span>
+        <button id="toggleCalendarBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="calendarBody">
+        <div class="row">
+          <label for="monthSelect">Month</label>
+          <div style="display:flex;align-items:center;gap:0.25rem;flex:1;">
+            <input type="month" id="monthSelect" class="inline-input">
+            <button id="todayBtn" class="secondary small">Today</button>
+          </div>
+        </div>
+        <div class="row">
+          <label for="jumpDate">Jump to date</label>
+          <input type="date" id="jumpDate">
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+    </div>
+
+    <!-- TODAY (selected day) -->
+    <div class="section">
+      <div class="section-title">
+        Today
+        <span class="pill" id="goalDisplay"></span>
+        <span class="pill" id="windowDisplay"></span>
+      </div>
+
+      <!-- DAILY WELLNESS -->
+      <div class="section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Daily wellness</span>
+          <button id="toggleWellnessBtn" class="secondary small calendar-toggle">▾</button>
+        </div>
+        <div id="wellnessBody">
+          <div class="row">
+            <label>Mood</label>
+            <div class="emoji-row" id="moodRow">
+              <button class="emoji-button" data-value="1">😞</button>
+              <button class="emoji-button" data-value="2">😐</button>
+              <button class="emoji-button" data-value="3">🙂</button>
+              <button class="emoji-button" data-value="4">🤩</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <label>Energy</label>
+            <div class="emoji-row" id="energyRow">
+              <button class="emoji-button" data-value="1">😫</button>
+              <button class="emoji-button" data-value="2">😴</button>
+              <button class="emoji-button" data-value="3">🙂</button>
+              <button class="emoji-button" data-value="4">⚡</button>
+            </div>
+          </div>
+
+          <div class="row" style="align-items:flex-start;">
+            <label style="margin-top:0.15rem;">Water</label>
+            <div style="flex:1;">
+              <div class="droplet-row" id="waterDroplets"></div>
+              <div class="hint">
+                Cups today:
+                <input type="number" id="waterInput" min="0" step="1" style="width:70px;display:inline-block;margin-left:0.25rem;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXERCISES -->
+      <div class="section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Exercises</span>
+          <button id="toggleExercisesBtn" class="secondary small calendar-toggle">▾</button>
+        </div>
+        <div id="exercisesBody">
+          <div id="exerciseList"></div>
+        </div>
+      </div>
+
+      <!-- SUPPLEMENTS -->
+      <div class="section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Supplements</span>
+          <button id="toggleSupplementsBtn" class="secondary small calendar-toggle">▾</button>
+        </div>
+        <div id="supplementsBody">
+          <div id="supplementList"></div>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Daily notes / journal</span>
+          <button id="toggleNotesBtn" class="secondary small calendar-toggle">▾</button>
+        </div>
+        <div id="notesBody">
+          <textarea id="todayNote" placeholder="How did today feel? Wins, struggles, thoughts…"></textarea>
+        </div>
+      </div>
+
+      <button id="resetDayBtn" class="secondary small">Reset this day</button>
+    </div>
+
+    <!-- WEIGH-INS EVERY 7TH DAY -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Weigh-ins (every 7th day)</span>
+        <button id="toggleWeighBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="weighBody">
+        <small id="currentWeekLabel"></small>
+        <div class="row">
+          <input type="number" id="weeklyWeight" class="inline-input" min="0" step="0.1">
+          <span>lbs</span>
+        </div>
+        <div id="lastWeightHint" class="hint"></div>
+        <button id="copyLastWeightBtn" class="secondary small">Use last weight</button>
+        <div class="week-list" id="weekHistory"></div>
+        <canvas id="weeklyChart" height="130"></canvas>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS / BADGES -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Achievements</span>
+        <button id="toggleAchievementsBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="achievementsBody">
+        <div class="badge-row" id="badgeRow"></div>
+      </div>
+    </div>
+
+    <!-- EXERCISE DETAILS -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Exercise details</span>
+        <button id="toggleExerciseDetailsBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="exerciseDetailsBody">
+        <div id="exerciseDetailsList" class="dashboard"></div>
+      </div>
+    </div>
+
+    <!-- WEIGHT LOSS PROJECTION -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Weight loss projection</span>
+        <button id="toggleProjectionBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="projectionBody">
+        <div id="projectionContent" class="dashboard"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Dashboard</span>
+        <button id="toggleDashboardBtn" class="secondary small calendar-toggle">▾</button>
+      </div>
+      <div id="dashboardBody">
+        <div id="dashboardContent" class="dashboard"></div>
+        <canvas id="dailyChart" height="130"></canvas>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Data stays on this device only. You’re building this one day at a time. ❤️
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = "fitnessJourneyData_v2";
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) throw new Error("no data");
+    const parsed = JSON.parse(raw);
+    if (!parsed.settings || !parsed.days || !parsed.weeklyWeights) {
+      throw new Error("bad data");
+    }
+    if (!parsed.settings.theme) {
+      parsed.settings.theme = "blue";
+    }
+    if (!parsed.settings.timeFormat) {
+      parsed.settings.timeFormat = "auto";
+    }
+    if (!parsed.settings.exercises) {
+      parsed.settings.exercises = ["Walk"];
+    }
+    return parsed;
+  } catch (e) {
+    return {
+      settings: {
+        startDate: null,
+        goalWeight: null,
+        eatStart: "14:00",
+        eatEnd: "20:00",
+        supplements: ["Multivitamin", "Magnesium"],
+        exercises: ["Walk"],
+        theme: "blue",
+        timeFormat: "auto",
+      },
+      days: {},
+      weeklyWeights: {}, // kept for backward compat, not used now
+    };
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function dateToKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function todayKey() {
+  return dateToKey(new Date());
+}
+
+function formatNiceDate(d) {
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getDayNumber(startDateStr, dateObj = new Date()) {
+  if (!startDateStr) return null;
+  const start = new Date(startDateStr + "T00:00:00");
+  const target = new Date(
+    dateObj.getFullYear(),
+    dateObj.getMonth(),
+    dateObj.getDate()
+  );
+  const diffMs = target - start;
+  const diffDays = Math.floor(diffMs / 86400000);
+  return diffDays >= 0 ? diffDays + 1 : null;
+}
+
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function keyToDate(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+const baseBoardTheme = {
+  "--wall-bg": "#d4d7dd",
+  "--board-bg": "#fdfdfd",
+  "--board-border": "#f0f0f0",
+  "--board-shadow": "0 0 0 3px #c8ccd2, 0 12px 20px rgba(0,0,0,0.25)",
+  "--text-main": "#222",
+};
+
+function applyTheme(themeName, save = true) {
+  const themes = {
+    blue: {
+      ...baseBoardTheme,
+      "--accent-main": "#1b4f9b",
+      "--accent-strong": "#e53935",
+      "--accent-soft-bg": "#e3f0ff",
+      "--accent-soft-border": "#1b4f9b",
+    },
+    purple: {
+      ...baseBoardTheme,
+      "--accent-main": "#6a1b9a",
+      "--accent-strong": "#d81b60",
+      "--accent-soft-bg": "#f3e5f5",
+      "--accent-soft-border": "#6a1b9a",
+    },
+    pink: {
+      ...baseBoardTheme,
+      "--accent-main": "#ad1457",
+      "--accent-strong": "#c2185b",
+      "--accent-soft-bg": "#fce4ec",
+      "--accent-soft-border": "#ad1457",
+    },
+    teal: {
+      ...baseBoardTheme,
+      "--accent-main": "#00695c",
+      "--accent-strong": "#00897b",
+      "--accent-soft-bg": "#e0f2f1",
+      "--accent-soft-border": "#00695c",
+    },
+    green: {
+      ...baseBoardTheme,
+      "--accent-main": "#2e7d32",
+      "--accent-strong": "#1b5e20",
+      "--accent-soft-bg": "#e8f5e9",
+      "--accent-soft-border": "#2e7d32",
+    },
+    yellow: {
+      ...baseBoardTheme,
+      "--accent-main": "#f9a825",
+      "--accent-strong": "#f57f17",
+      "--accent-soft-bg": "#fffde7",
+      "--accent-soft-border": "#f9a825",
+    },
+    red: {
+      ...baseBoardTheme,
+      "--accent-main": "#c62828",
+      "--accent-strong": "#b71c1c",
+      "--accent-soft-bg": "#ffebee",
+      "--accent-soft-border": "#c62828",
+    },
+    orange: {
+      ...baseBoardTheme,
+      "--accent-main": "#ef6c00",
+      "--accent-strong": "#e65100",
+      "--accent-soft-bg": "#fff3e0",
+      "--accent-soft-border": "#ef6c00",
+    },
+    rainbow: {
+      ...baseBoardTheme,
+      "--accent-main": "#8e24aa",
+      "--accent-strong": "#f4511e",
+      "--accent-soft-bg": "linear-gradient(90deg,#ff8a80,#ffea00,#80d8ff,#b388ff)",
+      "--accent-soft-border": "#8e24aa",
+    },
+    corkboard: {
+      ...baseBoardTheme,
+      "--wall-bg": "#f3eee2",
+      "--board-bg": "#f0d9a6",
+      "--board-border": "#d2b37c",
+      "--board-shadow": "0 0 0 3px #c19a5b, 0 12px 20px rgba(0,0,0,0.28)",
+      "--text-main": "#4a3520",
+      "--accent-main": "#b05a2b",
+      "--accent-strong": "#8d3b1c",
+      "--accent-soft-bg": "#fff4dd",
+      "--accent-soft-border": "#b05a2b",
+    },
+    neon: {
+      ...baseBoardTheme,
+      "--wall-bg": "#050816",
+      "--board-bg": "#111827",
+      "--board-border": "#1f2937",
+      "--board-shadow": "0 0 0 3px #1f2937, 0 12px 24px rgba(0,0,0,0.6)",
+      "--text-main": "#e5e7eb",
+      "--accent-main": "#ec4899",
+      "--accent-strong": "#22d3ee",
+      "--accent-soft-bg": "rgba(56,189,248,0.12)",
+      "--accent-soft-border": "#22d3ee",
+    },
+    chalkboard: {
+      ...baseBoardTheme,
+      "--wall-bg": "#27302f",
+      "--board-bg": "#e4efe6",
+      "--board-border": "#9ab8a0",
+      "--board-shadow": "0 0 0 3px #9ab8a0, 0 12px 20px rgba(0,0,0,0.25)",
+      "--text-main": "#1f2933",
+      "--accent-main": "#2f855a",
+      "--accent-strong": "#2c7a7b",
+      "--accent-soft-bg": "#f0faf4",
+      "--accent-soft-border": "#2f855a",
+    },
+  };
+  const theme = themes[themeName] || themes.blue;
+  Object.entries(theme).forEach(([k, v]) => {
+    document.documentElement.style.setProperty(k, v);
+  });
+  if (save) {
+    data.settings.theme = themeName;
+    saveData();
+  }
+}
+
+function getTimeMode() {
+  const tf = data.settings.timeFormat || "auto";
+  if (tf === "12") return "12";
+  if (tf === "24") return "24";
+  try {
+    const opts = new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions();
+    if (opts.hour12 === true) return "12";
+    if (opts.hour12 === false) return "24";
+  } catch (e) {}
+  return "12";
+}
+
+function formatTimeDisplay(timeStr) {
+  if (!timeStr) return "";
+  const [hStr, mStr] = timeStr.split(":");
+  let h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (Number.isNaN(h) || Number.isNaN(m)) return timeStr;
+  const mode = getTimeMode();
+  if (mode === "24") {
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  } else {
+    const am = h < 12;
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const suffix = am ? "AM" : "PM";
+    return `${h12}:${String(m).padStart(2, "0")} ${suffix}`;
+  }
+}
+
+let data = loadData();
+
+function ensureDayExists(key) {
+  if (!data.days[key]) {
+    data.days[key] = {
+      amExercise: false,
+      pmExercise: false,
+      supplementsTaken: {},
+      exercisesDone: {},
+      exerciseMinutes: {},
+      mood: null,
+      energy: null,
+      waterCups: 0,
+      weight: null,
+      note: "",
+    };
+  } else {
+    const e = data.days[key];
+    if (!e.supplementsTaken) e.supplementsTaken = {};
+    if (!e.exercisesDone) e.exercisesDone = {};
+    if (!e.exerciseMinutes) e.exerciseMinutes = {};
+    if (e.mood === undefined) e.mood = null;
+    if (e.energy === undefined) e.energy = null;
+    if (e.waterCups === undefined) e.waterCups = 0;
+  }
+}
+
+function hasAnyExercise(entry) {
+  if (!entry) return false;
+  const fromNew =
+    entry.exercisesDone &&
+    Object.values(entry.exercisesDone).some(Boolean);
+  const legacy = entry.amExercise || entry.pmExercise;
+  return !!(fromNew || legacy);
+}
+
+function countExercises(entry) {
+  if (!entry) return 0;
+  let count = 0;
+  if (entry.exercisesDone) {
+    count += Object.values(entry.exercisesDone).filter(Boolean).length;
+  }
+  if (entry.amExercise) count += 1;
+  if (entry.pmExercise) count += 1;
+  return count;
+}
+
+function getExerciseIcon(name) {
+  const n = name.toLowerCase();
+  if (n.includes("walk")) return "🚶‍♀️";
+  if (n.includes("run") || n.includes("jog")) return "🏃‍♀️";
+  if (n.includes("yoga")) return "🧘‍♀️";
+  if (n.includes("strength") || n.includes("lift") || n.includes("weights"))
+    return "🏋️‍♀️";
+  if (n.includes("bike") || n.includes("cycle")) return "🚲";
+  if (n.includes("swim")) return "🏊‍♀️";
+  if (n.includes("dance")) return "💃";
+  if (n.includes("stretch")) return "🤸‍♀️";
+  return "⭐";
+}
+
+function isDayLoggedKey(key) {
+  const e = data.days[key];
+  if (!e) return false;
+  const hasWeight = e.weight != null;
+  const hasExercise = hasAnyExercise(e);
+  const hasSupp =
+    e.supplementsTaken &&
+    Object.values(e.supplementsTaken).some(Boolean);
+  const hasNote = e.note && e.note.trim().length > 0;
+  const hasMood = e.mood != null;
+  const hasEnergy = e.energy != null;
+  const hasWater = e.waterCups && e.waterCups > 0;
+  return !!(hasWeight || hasExercise || hasSupp || hasNote || hasMood || hasEnergy || hasWater);
+}
+
+function isWeighInDay(key) {
+  const s = data.settings;
+  if (!s.startDate) return false;
+  const d = keyToDate(key);
+  const dn = getDayNumber(s.startDate, d);
+  return dn && dn >= 1 && dn % 7 === 1;
+}
+
+// DOM elements
+const dayNumberEl = document.getElementById("dayNumber");
+const dateLabelEl = document.getElementById("dateLabel");
+const reminderBannerEl = document.getElementById("reminderBanner");
+const prevDayBtn = document.getElementById("prevDayBtn");
+const nextDayBtn = document.getElementById("nextDayBtn");
+
+const monthSelect = document.getElementById("monthSelect");
+const calendarGrid = document.getElementById("calendarGrid");
+const toggleCalendarBtn = document.getElementById("toggleCalendarBtn");
+const calendarBody = document.getElementById("calendarBody");
+const todayBtn = document.getElementById("todayBtn");
+const jumpDateInput = document.getElementById("jumpDate");
+
+const startDateInput = document.getElementById("startDate");
+const goalWeightInput = document.getElementById("goalWeight");
+const eatStartInput = document.getElementById("eatStart");
+const eatEndInput = document.getElementById("eatEnd");
+const themeSelect = document.getElementById("themeSelect");
+const timeFormatSelect = document.getElementById("timeFormatSelect");
+const exerciseNamesInput = document.getElementById("exerciseNames");
+const supplementNamesInput = document.getElementById("supplementNames");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const resetAllBtn = document.getElementById("resetAllBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFileInput = document.getElementById("importFile");
+
+const moodRow = document.getElementById("moodRow");
+const energyRow = document.getElementById("energyRow");
+const waterDropletsEl = document.getElementById("waterDroplets");
+const waterInput = document.getElementById("waterInput");
+
+const exerciseListEl = document.getElementById("exerciseList");
+const supplementListEl = document.getElementById("supplementList");
+const todayNoteInput = document.getElementById("todayNote");
+const goalDisplayEl = document.getElementById("goalDisplay");
+const windowDisplayEl = document.getElementById("windowDisplay");
+const resetDayBtn = document.getElementById("resetDayBtn");
+
+const weeklyWeightInput = document.getElementById("weeklyWeight");
+const currentWeekLabelEl = document.getElementById("currentWeekLabel");
+const weekHistoryEl = document.getElementById("weekHistory");
+const weeklyChart = document.getElementById("weeklyChart");
+const lastWeightHintEl = document.getElementById("lastWeightHint");
+const copyLastWeightBtn = document.getElementById("copyLastWeightBtn");
+
+const dailyChart = document.getElementById("dailyChart");
+const badgeRowEl = document.getElementById("badgeRow");
+const dashboardContentEl = document.getElementById("dashboardContent");
+
+const exerciseDetailsListEl = document.getElementById("exerciseDetailsList");
+const projectionContentEl = document.getElementById("projectionContent");
+
+const toggleWellnessBtn = document.getElementById("toggleWellnessBtn");
+const wellnessBody = document.getElementById("wellnessBody");
+
+const toggleExercisesBtn = document.getElementById("toggleExercisesBtn");
+const exercisesBody = document.getElementById("exercisesBody");
+
+const toggleSupplementsBtn = document.getElementById("toggleSupplementsBtn");
+const supplementsBody = document.getElementById("supplementsBody");
+
+const toggleNotesBtn = document.getElementById("toggleNotesBtn");
+const notesBody = document.getElementById("notesBody");
+
+const toggleWeighBtn = document.getElementById("toggleWeighBtn");
+const weighBody = document.getElementById("weighBody");
+
+const toggleAchievementsBtn = document.getElementById("toggleAchievementsBtn");
+const achievementsBody = document.getElementById("achievementsBody");
+
+const toggleExerciseDetailsBtn = document.getElementById("toggleExerciseDetailsBtn");
+const exerciseDetailsBody = document.getElementById("exerciseDetailsBody");
+
+const toggleProjectionBtn = document.getElementById("toggleProjectionBtn");
+const projectionBody = document.getElementById("projectionBody");
+
+const toggleDashboardBtn = document.getElementById("toggleDashboardBtn");
+const dashboardBody = document.getElementById("dashboardBody");
+
+const today = new Date();
+const tKey = todayKey();
+
+let currentViewDate = new Date(
+  today.getFullYear(),
+  today.getMonth(),
+  today.getDate()
+);
+let currentViewKey = tKey;
+let currentViewIsWeighDay = false;
+
+// visibility flags
+let calendarVisible = true;
+let wellnessVisible = true;
+let exercisesVisible = true;
+let supplementsVisible = true;
+let notesVisible = true;
+let weighVisible = true;
+let achievementsVisible = true;
+let exerciseDetailsVisible = true;
+let projectionVisible = true;
+let dashboardVisible = true;
+
+// cache of progress stats for projection
+let lastProgressStats = null;
+
+ensureDayExists(tKey);
+
+function getLastWeighBeforeView() {
+  const keys = Object.keys(data.days).sort();
+  let last = null;
+  keys.forEach((k) => {
+    if (k < currentViewKey) {
+      const w = data.days[k].weight;
+      if (w != null) last = w;
+    }
+  });
+  return last;
+}
+
+function getWeighInKeysSorted() {
+  const s = data.settings;
+  return Object.keys(data.days)
+    .filter((k) => {
+      const e = data.days[k];
+      if (e.weight == null) return false;
+      if (!s.startDate) return false;
+      const d = keyToDate(k);
+      const dn = getDayNumber(s.startDate, d);
+      return dn && dn >= 1 && dn % 7 === 1;
+    })
+    .sort();
+}
+
+// RENDER FUNCTIONS
+function renderSettings() {
+  const s = data.settings;
+  if (s.startDate) startDateInput.value = s.startDate;
+  if (s.goalWeight != null) goalWeightInput.value = s.goalWeight;
+  eatStartInput.value = s.eatStart || "14:00";
+  eatEndInput.value = s.eatEnd || "20:00";
+  supplementNamesInput.value = (s.supplements || []).join("\n");
+  exerciseNamesInput.value = (s.exercises || []).join("\n");
+  themeSelect.value = s.theme || "blue";
+  timeFormatSelect.value = s.timeFormat || "auto";
+
+  const year = currentViewDate.getFullYear();
+  const month = String(currentViewDate.getMonth() + 1).padStart(2, "0");
+  monthSelect.value = `${year}-${month}`;
+
+  jumpDateInput.value = dateToKey(currentViewDate);
+}
+
+function renderHeader() {
+  const s = data.settings;
+  const dNum = getDayNumber(s.startDate, currentViewDate);
+  dayNumberEl.textContent = dNum ? `Day ${dNum}` : "Set start date";
+  dateLabelEl.textContent = formatNiceDate(currentViewDate);
+
+  if (!jumpDateInput.value || jumpDateInput.value !== dateToKey(currentViewDate)) {
+    jumpDateInput.value = dateToKey(currentViewDate);
+  }
+
+  goalDisplayEl.textContent = s.goalWeight
+    ? `Goal: ${s.goalWeight} lbs`
+    : "No goal set";
+
+  if (s.eatStart && s.eatEnd) {
+    const startDisp = formatTimeDisplay(s.eatStart);
+    const endDisp = formatTimeDisplay(s.eatEnd);
+    windowDisplayEl.textContent = `Eating: ${startDisp}–${endDisp}`;
+  } else {
+    windowDisplayEl.textContent = "";
+  }
+}
+
+function renderWellness() {
+  ensureDayExists(currentViewKey);
+  const entry = data.days[currentViewKey];
+
+  Array.from(moodRow.querySelectorAll(".emoji-button")).forEach((btn) => {
+    const val = parseInt(btn.dataset.value, 10);
+    btn.classList.toggle("selected", entry.mood === val);
+  });
+
+  Array.from(energyRow.querySelectorAll(".emoji-button")).forEach((btn) => {
+    const val = parseInt(btn.dataset.value, 10);
+    btn.classList.toggle("selected", entry.energy === val);
+  });
+
+  waterDropletsEl.innerHTML = "";
+  const cups = entry.waterCups || 0;
+  const maxCups = 8;
+  for (let i = 1; i <= maxCups; i++) {
+    const span = document.createElement("span");
+    span.className = "droplet" + (i <= cups ? " active" : "");
+    span.textContent = "💧";
+    span.dataset.value = String(i);
+    waterDropletsEl.appendChild(span);
+  }
+
+  waterInput.value = cups || "";
+}
+
+function renderToday() {
+  ensureDayExists(currentViewKey);
+  const entry = data.days[currentViewKey];
+
+  renderWellness();
+
+  exerciseListEl.innerHTML = "";
+  (data.settings.exercises || []).forEach((name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const label = document.createElement("label");
+    label.textContent = trimmed;
+
+    const rightBox = document.createElement("div");
+    rightBox.style.display = "flex";
+    rightBox.style.alignItems = "center";
+    rightBox.style.gap = "0.25rem";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !!entry.exercisesDone?.[trimmed];
+
+    const minutesInput = document.createElement("input");
+    minutesInput.type = "number";
+    minutesInput.min = "0";
+    minutesInput.step = "1";
+    minutesInput.className = "inline-input";
+    minutesInput.placeholder = "mins";
+    minutesInput.value =
+      entry.exerciseMinutes && entry.exerciseMinutes[trimmed] != null
+        ? entry.exerciseMinutes[trimmed]
+        : "";
+
+    checkbox.addEventListener("change", () => {
+      entry.exercisesDone[trimmed] = checkbox.checked;
+      saveData();
+      renderDashboard();
+      renderBadges();
+      renderReminders();
+    });
+
+    minutesInput.addEventListener("change", () => {
+      const val = minutesInput.value;
+      if (!entry.exerciseMinutes) entry.exerciseMinutes = {};
+      entry.exerciseMinutes[trimmed] = val ? parseInt(val, 10) : null;
+      saveData();
+      renderDashboard();
+    });
+
+    rightBox.appendChild(checkbox);
+    rightBox.appendChild(minutesInput);
+
+    row.appendChild(label);
+    row.appendChild(rightBox);
+    exerciseListEl.appendChild(row);
+  });
+
+  supplementListEl.innerHTML = "";
+  (data.settings.supplements || []).forEach((name) => {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const label = document.createElement("label");
+    label.textContent = name.trim();
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !!entry.supplementsTaken?.[name];
+
+    checkbox.addEventListener("change", () => {
+      entry.supplementsTaken[name] = checkbox.checked;
+      saveData();
+    });
+
+    row.appendChild(label);
+    row.appendChild(checkbox);
+    supplementListEl.appendChild(row);
+  });
+
+  todayNoteInput.value = entry.note ?? "";
+}
+
+function renderWeighIn() {
+  const s = data.settings;
+  ensureDayExists(currentViewKey);
+  const entry = data.days[currentViewKey];
+
+  currentViewIsWeighDay = false;
+  let infoText = "";
+
+  if (!s.startDate) {
+    infoText = "Set your journey start date to enable scheduled weigh-ins.";
+    weeklyWeightInput.disabled = true;
+    weeklyWeightInput.value = "";
+    copyLastWeightBtn.disabled = true;
+    lastWeightHintEl.textContent = "";
+  } else {
+    const dNum = getDayNumber(s.startDate, currentViewDate);
+    if (!dNum || dNum < 1) {
+      infoText = "This day is before your journey start date.";
+      weeklyWeightInput.disabled = true;
+      weeklyWeightInput.value = "";
+      copyLastWeightBtn.disabled = true;
+      lastWeightHintEl.textContent = "";
+    } else if (dNum % 7 === 1) {
+      currentViewIsWeighDay = true;
+      infoText = `Weigh-in day (Day ${dNum})`;
+      weeklyWeightInput.disabled = false;
+      weeklyWeightInput.value =
+        entry.weight != null ? entry.weight : "";
+
+      const lastW = getLastWeighBeforeView();
+      if (lastW != null) {
+        lastWeightHintEl.textContent = `Last weigh-in: ${lastW.toFixed(1)} lbs`;
+        copyLastWeightBtn.disabled = false;
+      } else {
+        lastWeightHintEl.textContent =
+          "No previous weigh-in recorded yet.";
+        copyLastWeightBtn.disabled = true;
+      }
+    } else {
+      const offset = 7 - ((dNum - 1) % 7);
+      const nextDayNum = dNum + offset;
+      const startDate = new Date(s.startDate + "T00:00:00");
+      const nextDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate() + (nextDayNum - 1)
+      );
+      infoText = `Not a weigh-in day. Next weigh-in: Day ${nextDayNum} (${formatNiceDate(
+        nextDate
+      )}).`;
+      weeklyWeightInput.disabled = true;
+      weeklyWeightInput.value = "";
+      copyLastWeightBtn.disabled = true;
+      lastWeightHintEl.textContent = "";
+    }
+  }
+
+  currentWeekLabelEl.textContent = infoText;
+
+  const s2 = data.settings;
+  const keysDesc = getWeighInKeysSorted().reverse();
+  weekHistoryEl.innerHTML = "";
+  keysDesc.slice(0, 4).forEach((k) => {
+    const d = keyToDate(k);
+    const dn = getDayNumber(s2.startDate, d);
+    const div = document.createElement("div");
+    const label = document.createElement("span");
+    label.textContent = `Day ${dn} (${d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    })})`;
+    const val = document.createElement("span");
+    val.textContent = `${data.days[k].weight} lbs`;
+    div.appendChild(label);
+    div.appendChild(val);
+    weekHistoryEl.appendChild(div);
+  });
+
+  renderWeighChart();
+}
+
+function renderWeighChart() {
+  if (!weeklyChart || !weeklyChart.getContext) return;
+  const ctx = weeklyChart.getContext("2d");
+  weeklyChart.width = weeklyChart.clientWidth || weeklyChart.width;
+
+  const keys = getWeighInKeysSorted();
+  ctx.clearRect(0, 0, weeklyChart.width, weeklyChart.height);
+
+  const pad = 8;
+  const h = weeklyChart.height;
+  const w = weeklyChart.width;
+
+  ctx.strokeStyle = "#cfd2dc";
+  ctx.beginPath();
+  ctx.moveTo(10, h - 15);
+  ctx.lineTo(w - 10, h - 15);
+  ctx.stroke();
+
+  if (keys.length === 0) return;
+
+  const points = keys.map((k) => data.days[k].weight);
+  const minW = Math.min(...points);
+  const maxW = Math.max(...points);
+  const range = maxW - minW || 1;
+  const xStep = keys.length > 1 ? (w - pad * 2) / (keys.length - 1) : 0;
+
+  const accent =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-main")
+      .trim() || "#1b4f9b";
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  keys.forEach((k, idx) => {
+    const val = data.days[k].weight;
+    const x = keys.length === 1 ? w / 2 : pad + idx * xStep;
+    const y = pad + (1 - (val - minW) / range) * (h - pad * 2);
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  const pointColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-strong")
+      .trim() || "#e53935";
+  ctx.fillStyle = pointColor;
+  keys.forEach((k, idx) => {
+    const val = data.days[k].weight;
+    const x = keys.length === 1 ? w / 2 : pad + idx * xStep;
+    const y = pad + (1 - (val - minW) / range) * (h - pad * 2);
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function renderDailyChart() {
+  if (!dailyChart || !dailyChart.getContext) return;
+  const ctx = dailyChart.getContext("2d");
+  dailyChart.width = dailyChart.clientWidth || dailyChart.width;
+
+  const keys = Object.keys(data.days)
+    .filter((k) => data.days[k].weight != null)
+    .sort();
+  ctx.clearRect(0, 0, dailyChart.width, dailyChart.height);
+
+  const pad = 8;
+  const h = dailyChart.height;
+  const w = dailyChart.width;
+
+  ctx.strokeStyle = "#cfd2dc";
+  ctx.beginPath();
+  ctx.moveTo(10, h - 15);
+  ctx.lineTo(w - 10, h - 15);
+  ctx.stroke();
+
+  if (keys.length === 0) return;
+
+  const points = keys.map((k) => data.days[k].weight);
+  const minW = Math.min(...points);
+  const maxW = Math.max(...points);
+  const range = maxW - minW || 1;
+  const xStep = keys.length > 1 ? (w - pad * 2) / (keys.length - 1) : 0;
+
+  const accent =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-main")
+      .trim() || "#1b4f9b";
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  keys.forEach((k, idx) => {
+    const val = data.days[k].weight;
+    const x = keys.length === 1 ? w / 2 : pad + idx * xStep;
+    const y = pad + (1 - (val - minW) / range) * (h - pad * 2);
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  const pointColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-strong")
+      .trim() || "#e53935";
+  ctx.fillStyle = pointColor;
+  keys.forEach((k, idx) => {
+    const val = data.days[k].weight;
+    const x = keys.length === 1 ? w / 2 : pad + idx * xStep;
+    const y = pad + (1 - (val - minW) / range) * (h - pad * 2);
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function renderBadges() {
+  const s = data.settings;
+  const dNum = getDayNumber(s.startDate);
+  const dayKeys = Object.keys(data.days).sort();
+
+  let lowestWeight = null;
+  let weightCount = 0;
+  let exerciseDayCount = 0;
+  let hydrationDays = 0;
+  const exerciseCounts = {};
+
+  const loggedKeys = [];
+
+  dayKeys.forEach((k) => {
+    const e = data.days[k];
+    const hasWeight = e.weight != null;
+    const hasExercise = hasAnyExercise(e);
+    const hasSupp =
+      e.supplementsTaken &&
+      Object.values(e.supplementsTaken).some(Boolean);
+    const hasNote = e.note && e.note.trim().length > 0;
+    const hasMood = e.mood != null;
+    const hasEnergy = e.energy != null;
+    const hasWater = e.waterCups && e.waterCups > 0;
+
+    if (hasWeight) {
+      lowestWeight =
+        lowestWeight == null ? e.weight : Math.min(lowestWeight, e.weight);
+      weightCount++;
+    }
+
+    if (hasExercise) {
+      exerciseDayCount++;
+    }
+
+    if (e.exercisesDone) {
+      Object.entries(e.exercisesDone).forEach(([name, done]) => {
+        if (!done) return;
+        exerciseCounts[name] = (exerciseCounts[name] || 0) + 1;
+      });
+    }
+
+    if (e.waterCups && e.waterCups >= 4) {
+      hydrationDays++;
+    }
+
+    if (hasWeight || hasExercise || hasSupp || hasNote || hasMood || hasEnergy || hasWater) {
+      loggedKeys.push(k);
+    }
+  });
+
+  let streak = 0;
+  if (loggedKeys.length > 0) {
+    const sorted = [...loggedKeys].sort();
+    let i = sorted.length - 1;
+    let prevDate = keyToDate(sorted[i]);
+    streak = 1;
+    for (i = sorted.length - 2; i >= 0; i--) {
+      const curDate = keyToDate(sorted[i]);
+      const diffDays = Math.round((prevDate - curDate) / 86400000);
+      if (diffDays === 1) {
+        streak++;
+        prevDate = curDate;
+      } else {
+        break;
+      }
+    }
+  }
+
+  badgeRowEl.innerHTML = "";
+
+  if (dNum) {
+    const milestones = [7, 30, 60, 100];
+    milestones.forEach((m) => {
+      if (dNum >= m) {
+        const badge = document.createElement("div");
+        badge.className = "badge highlight";
+        badge.innerHTML = `<span class="icon">🏅</span><span>Day ${m}+</span>`;
+        badgeRowEl.appendChild(badge);
+      }
+    });
+  }
+
+  if (streak >= 3) {
+    const badge = document.createElement("div");
+    badge.className = "badge highlight";
+    badge.innerHTML = `<span class="icon">🔥</span><span>${streak}-day log streak</span>`;
+    badgeRowEl.appendChild(badge);
+  }
+
+  if (exerciseDayCount >= 5) {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.innerHTML = `<span class="icon">🏃‍♀️</span><span>Active days (${exerciseDayCount})</span>`;
+    badgeRowEl.appendChild(badge);
+  }
+
+  if (hydrationDays >= 5) {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.innerHTML = `<span class="icon">💧</span><span>Hydration hero (${hydrationDays} days)</span>`;
+    badgeRowEl.appendChild(badge);
+  }
+
+  const entries = Object.entries(exerciseCounts)
+    .filter(([, count]) => count >= 5)
+    .sort((a, b) => b[1] - a[1]);
+
+  entries.forEach(([name, count]) => {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    const icon = getExerciseIcon(name);
+    badge.innerHTML = `<span class="icon">${icon}</span><span>${name} – ${count} days</span>`;
+    badgeRowEl.appendChild(badge);
+  });
+
+  const todayWeight = data.days[tKey]?.weight;
+  if (
+    lowestWeight != null &&
+    todayWeight != null &&
+    weightCount > 1 &&
+    todayWeight === lowestWeight
+  ) {
+    const badge = document.createElement("div");
+    badge.className = "badge highlight";
+    badge.innerHTML = `<span class="icon">📉</span><span>New lowest weight!</span>`;
+    badgeRowEl.appendChild(badge);
+  }
+
+  if (!badgeRowEl.childNodes.length) {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = "Your first badge is coming soon ✨";
+    badgeRowEl.appendChild(badge);
+  }
+}
+
+function renderExerciseDetails() {
+  exerciseDetailsListEl.innerHTML = "";
+  const exercises = data.settings.exercises || [];
+  if (!exercises.length) {
+    exerciseDetailsListEl.textContent = "No exercises defined yet.";
+    return;
+  }
+
+  const stats = {};
+  exercises.forEach((name) => {
+    const t = name.trim();
+    if (!t) return;
+    stats[t] = { days: 0, totalMinutes: 0, lastDate: null };
+  });
+
+  const keys = Object.keys(data.days).sort();
+  keys.forEach((k) => {
+    const entry = data.days[k];
+    if (!entry) return;
+    const d = keyToDate(k);
+
+    exercises.forEach((name) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const done = entry.exercisesDone && entry.exercisesDone[trimmed];
+      const mins = entry.exerciseMinutes && entry.exerciseMinutes[trimmed];
+      const consideredDone = !!done || (typeof mins === "number" && mins > 0);
+      if (!consideredDone) return;
+
+      const stat = stats[trimmed];
+      stat.days += 1;
+      if (typeof mins === "number" && !Number.isNaN(mins)) {
+        stat.totalMinutes += mins;
+      }
+      if (!stat.lastDate || d > stat.lastDate) {
+        stat.lastDate = d;
+      }
+    });
+  });
+
+  let anyData = false;
+  Object.entries(stats).forEach(([name, s]) => {
+    if (!s.days && !s.totalMinutes) return;
+    anyData = true;
+
+    const avg = s.days ? (s.totalMinutes / s.days) : 0;
+    const last = s.lastDate
+      ? s.lastDate.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—";
+
+    const row = document.createElement("div");
+    row.className = "dashboard-row";
+
+    const label = document.createElement("span");
+    label.className = "dashboard-label";
+    label.textContent = `${name} (${s.days} day${s.days === 1 ? "" : "s"})`;
+
+    const val = document.createElement("span");
+    val.className = "dashboard-value";
+    const minsText = s.totalMinutes
+      ? `${s.totalMinutes} min total, avg ${avg.toFixed(1)} / day`
+      : "no minutes logged";
+    val.textContent = `${minsText} • last: ${last}`;
+
+    row.appendChild(label);
+    row.appendChild(val);
+    exerciseDetailsListEl.appendChild(row);
+  });
+
+  if (!anyData) {
+    exerciseDetailsListEl.textContent = "No exercise time logged yet.";
+  }
+}
+
+function renderProjection() {
+  projectionContentEl.innerHTML = "";
+
+  const s = data.settings;
+  const stats = lastProgressStats;
+  if (!s.goalWeight || !stats || stats.currentWeight == null || stats.startWeight == null) {
+    projectionContentEl.innerHTML = `
+      <div class="dashboard-row">
+        <span class="dashboard-label">Projection</span>
+        <span class="dashboard-value">Not enough data yet</span>
+      </div>`;
+    return;
+  }
+
+  const { currentWeight, startWeight, avgWeeklyChange, projectedGoalDate } = stats;
+  const goal = s.goalWeight;
+  const fromStart = startWeight - currentWeight;
+  const remaining = currentWeight - goal;
+  let weeksLeft = null;
+  if (avgWeeklyChange != null && avgWeeklyChange < 0 && remaining > 0) {
+    weeksLeft = remaining / (-avgWeeklyChange);
+  }
+
+  const fmt = (v, suffix = "") =>
+    v == null || Number.isNaN(v) ? "—" : `${v.toFixed(1)}${suffix}`;
+
+  const projDateText = projectedGoalDate
+    ? projectedGoalDate.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
+
+  projectionContentEl.innerHTML = `
+    <div class="dashboard-row">
+      <span class="dashboard-label">Start weight</span>
+      <span class="dashboard-value">${fmt(startWeight, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Current weight</span>
+      <span class="dashboard-value">${fmt(currentWeight, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Goal weight</span>
+      <span class="dashboard-value">${fmt(goal, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Lost so far</span>
+      <span class="dashboard-value">${fmt(fromStart, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Left to lose</span>
+      <span class="dashboard-value">${fmt(remaining, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Avg change per 7 days</span>
+      <span class="dashboard-value">${
+        avgWeeklyChange == null
+          ? "—"
+          : `${avgWeeklyChange > 0 ? "+" : ""}${avgWeeklyChange.toFixed(1)} lbs`
+      }</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Est. weeks to goal</span>
+      <span class="dashboard-value">${
+        weeksLeft == null || !Number.isFinite(weeksLeft)
+          ? "—"
+          : weeksLeft.toFixed(1)
+      }</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Projected goal date</span>
+      <span class="dashboard-value">${projDateText}</span>
+    </div>
+  `;
+}
+
+function renderDashboard() {
+  const s = data.settings;
+  const dayKeys = Object.keys(data.days).sort();
+  let startWeight = null;
+  let currentWeight = null;
+  let lowestWeight = null;
+  let daysWithAny = 0;
+  let exerciseDayCount = 0;
+  let exerciseCheckCount = 0;
+  let hydrationDays = 0;
+  let totalExerciseMinutes = 0;
+
+  dayKeys.forEach((k) => {
+    const e = data.days[k];
+    const hasWeight = e.weight != null;
+    const hasExercise = hasAnyExercise(e);
+    const hasSupp =
+      e.supplementsTaken &&
+      Object.values(e.supplementsTaken).some(Boolean);
+    const hasNote = e.note && e.note.trim().length > 0;
+    const hasMood = e.mood != null;
+    const hasEnergy = e.energy != null;
+    const hasWater = e.waterCups && e.waterCups > 0;
+
+    if (hasWeight) {
+      if (startWeight == null) startWeight = e.weight;
+      currentWeight = e.weight;
+      lowestWeight =
+        lowestWeight == null ? e.weight : Math.min(lowestWeight, e.weight);
+    }
+
+    if (hasWeight || hasExercise || hasSupp || hasNote || hasMood || hasEnergy || hasWater) {
+      daysWithAny++;
+    }
+
+    if (hasExercise) {
+      exerciseDayCount++;
+    }
+    exerciseCheckCount += countExercises(e);
+
+    if (e.exerciseMinutes) {
+      Object.values(e.exerciseMinutes).forEach((mins) => {
+        if (mins != null) totalExerciseMinutes += mins;
+      });
+    }
+
+    if (e.waterCups && e.waterCups >= 4) {
+      hydrationDays++;
+    }
+  });
+
+  let avgWeeklyChange = null;
+  let projectedGoalDate = null;
+  const weighKeys = getWeighInKeysSorted();
+  if (weighKeys.length >= 2 && s.startDate) {
+    const firstK = weighKeys[0];
+    const lastK = weighKeys[weighKeys.length - 1];
+    const firstW = data.days[firstK].weight;
+    const lastW = data.days[lastK].weight;
+    const firstD = keyToDate(firstK);
+    const lastD = keyToDate(lastK);
+    const firstN = getDayNumber(s.startDate, firstD);
+    const lastN = getDayNumber(s.startDate, lastD);
+    const intervals = (lastN - firstN) / 7 || 1;
+    avgWeeklyChange = (lastW - firstW) / intervals;
+
+    if (
+      s.goalWeight != null &&
+      currentWeight != null &&
+      avgWeeklyChange < 0
+    ) {
+      const diff = currentWeight - s.goalWeight;
+      if (diff > 0.2) {
+        const weeksToGoal = diff / (-avgWeeklyChange);
+        const daysToGoal = Math.round(weeksToGoal * 7);
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + daysToGoal);
+        projectedGoalDate = targetDate;
+      }
+    }
+  }
+
+  const dNum = getDayNumber(s.startDate);
+
+  const fmt = (v, suffix = "") =>
+    v == null || Number.isNaN(v) ? "—" : `${v.toFixed(1)}${suffix}`;
+
+  const totalLost =
+    startWeight != null && currentWeight != null
+      ? startWeight - currentWeight
+      : null;
+
+  const projText = projectedGoalDate
+    ? projectedGoalDate.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
+
+  lastProgressStats = {
+    startWeight,
+    currentWeight,
+    lowestWeight,
+    daysWithAny,
+    exerciseDayCount,
+    exerciseCheckCount,
+    hydrationDays,
+    totalExerciseMinutes,
+    avgWeeklyChange,
+    projectedGoalDate,
+  };
+
+  dashboardContentEl.innerHTML = `
+    <div class="dashboard-row">
+      <span class="dashboard-label">Journey day</span>
+      <span class="dashboard-value">${dNum ?? "—"}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Start weight</span>
+      <span class="dashboard-value">${fmt(startWeight, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Current weight</span>
+      <span class="dashboard-value">${fmt(currentWeight, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Total lost</span>
+      <span class="dashboard-value">${fmt(totalLost, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Lowest weight</span>
+      <span class="dashboard-value">${fmt(lowestWeight, " lbs")}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Days logged</span>
+      <span class="dashboard-value">${daysWithAny}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Exercise days</span>
+      <span class="dashboard-value">${exerciseDayCount}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Exercise check-ins</span>
+      <span class="dashboard-value">${exerciseCheckCount}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Total exercise minutes</span>
+      <span class="dashboard-value">${totalExerciseMinutes}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Hydrated days (4+ cups)</span>
+      <span class="dashboard-value">${hydrationDays}</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Avg change (per 7 days)</span>
+      <span class="dashboard-value">${
+        avgWeeklyChange == null
+          ? "—"
+          : `${avgWeeklyChange > 0 ? "+" : ""}${avgWeeklyChange.toFixed(
+              1
+            )} lbs`
+      }</span>
+    </div>
+    <div class="dashboard-row">
+      <span class="dashboard-label">Projected goal date</span>
+      <span class="dashboard-value">${projText}</span>
+    </div>
+  `;
+
+  renderDailyChart();
+  renderProjection();
+  renderExerciseDetails();
+}
+
+function renderReminders() {
+  const s = data.settings;
+  ensureDayExists(tKey);
+  const entry = data.days[tKey];
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMin = parseTimeToMinutes(s.eatStart);
+  const endMin = parseTimeToMinutes(s.eatEnd);
+  const msgs = [];
+
+  if (startMin != null && endMin != null) {
+    const startDisp = formatTimeDisplay(s.eatStart);
+    const endDisp = formatTimeDisplay(s.eatEnd);
+    if (nowMinutes < startMin) {
+      msgs.push(`Your eating window starts at ${startDisp}.`);
+    } else if (nowMinutes > endMin) {
+      msgs.push(
+        `Your eating window ended at ${endDisp}. Great job staying on track.`
+      );
+    } else {
+      msgs.push(`You’re inside your eating window (${startDisp}–${endDisp}).`);
+    }
+  }
+
+  if (!hasAnyExercise(entry)) {
+    if (now.getHours() < 12) {
+      msgs.push("Don’t forget to check off at least one exercise today.");
+    } else if (now.getHours() >= 16) {
+      msgs.push("There’s still time to get some movement in today. 💪");
+    }
+  }
+
+  if (!entry.waterCups || entry.waterCups < 4) {
+    if (now.getHours() >= 12) {
+      msgs.push("Check in on your water — aim for at least a few cups today. 💧");
+    }
+  }
+
+  reminderBannerEl.textContent = msgs.join(" • ") || "";
+}
+
+function updateDayNavButtons() {
+  const todayMid = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  const viewMid = new Date(
+    currentViewDate.getFullYear(),
+    currentViewDate.getMonth(),
+    currentViewDate.getDate()
+  );
+  nextDayBtn.disabled = viewMid >= todayMid;
+}
+
+function renderCalendar() {
+  calendarGrid.innerHTML = "";
+  const dows = ["S", "M", "T", "W", "T", "F", "S"];
+  dows.forEach((d) => {
+    const cell = document.createElement("div");
+    cell.className = "calendar-dow";
+    cell.textContent = d;
+    calendarGrid.appendChild(cell);
+  });
+
+  let baseYear, baseMonth;
+  if (monthSelect.value) {
+    const [y, m] = monthSelect.value.split("-").map(Number);
+    baseYear = y;
+    baseMonth = m - 1;
+  } else {
+    baseYear = currentViewDate.getFullYear();
+    baseMonth = currentViewDate.getMonth();
+  }
+
+  const firstOfMonth = new Date(baseYear, baseMonth, 1);
+  const firstDow = firstOfMonth.getDay();
+  const daysInMonth = new Date(baseYear, baseMonth + 1, 0).getDate();
+
+  for (let i = 0; i < firstDow; i++) {
+    const empty = document.createElement("div");
+    empty.className = "day-cell empty";
+    calendarGrid.appendChild(empty);
+  }
+
+  const todayKeyStr = tKey;
+  const viewKeyStr = currentViewKey;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObj = new Date(baseYear, baseMonth, day);
+    const key = dateToKey(dateObj);
+
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
+    cell.textContent = day;
+    cell.dataset.key = key;
+
+    if (isDayLoggedKey(key)) cell.classList.add("logged");
+    if (isWeighInDay(key)) cell.classList.add("weighin");
+    if (key === todayKeyStr) cell.classList.add("today");
+    if (key === viewKeyStr) cell.classList.add("selected");
+
+    calendarGrid.appendChild(cell);
+  }
+}
+
+function jumpToDate(dateObj) {
+  const todayMid = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  const newMid = new Date(
+    dateObj.getFullYear(),
+    dateObj.getMonth(),
+    dateObj.getDate()
+  );
+  if (newMid > todayMid) return;
+
+  currentViewDate = newMid;
+  currentViewKey = dateToKey(currentViewDate);
+  ensureDayExists(currentViewKey);
+  saveData();
+
+  const year = currentViewDate.getFullYear();
+  const month = String(currentViewDate.getMonth() + 1).padStart(2, "0");
+  monthSelect.value = `${year}-${month}`;
+  jumpDateInput.value = dateToKey(currentViewDate);
+
+  renderHeader();
+  renderToday();
+  renderWeighIn();
+  renderDashboard();
+  renderBadges();
+  renderReminders();
+  renderCalendar();
+  updateDayNavButtons();
+}
+
+function changeDay(delta) {
+  const newDate = new Date(
+    currentViewDate.getFullYear(),
+    currentViewDate.getMonth(),
+    currentViewDate.getDate()
+  );
+  newDate.setDate(newDate.getDate() + delta);
+  jumpToDate(newDate);
+}
+
+// show/hide helpers
+function setCalendarVisible(vis) {
+  calendarVisible = vis;
+  calendarBody.style.display = vis ? "block" : "none";
+  toggleCalendarBtn.textContent = vis ? "▾" : "▸";
+}
+function setWellnessVisible(vis) {
+  wellnessVisible = vis;
+  wellnessBody.style.display = vis ? "block" : "none";
+  toggleWellnessBtn.textContent = vis ? "▾" : "▸";
+}
+function setExercisesVisible(vis) {
+  exercisesVisible = vis;
+  exercisesBody.style.display = vis ? "block" : "none";
+  toggleExercisesBtn.textContent = vis ? "▾" : "▸";
+}
+function setSupplementsVisible(vis) {
+  supplementsVisible = vis;
+  supplementsBody.style.display = vis ? "block" : "none";
+  toggleSupplementsBtn.textContent = vis ? "▾" : "▸";
+}
+function setNotesVisible(vis) {
+  notesVisible = vis;
+  notesBody.style.display = vis ? "block" : "none";
+  toggleNotesBtn.textContent = vis ? "▾" : "▸";
+}
+function setWeighVisible(vis) {
+  weighVisible = vis;
+  weighBody.style.display = vis ? "block" : "none";
+  toggleWeighBtn.textContent = vis ? "▾" : "▸";
+}
+function setAchievementsVisible(vis) {
+  achievementsVisible = vis;
+  achievementsBody.style.display = vis ? "block" : "none";
+  toggleAchievementsBtn.textContent = vis ? "▾" : "▸";
+}
+function setExerciseDetailsVisible(vis) {
+  exerciseDetailsVisible = vis;
+  exerciseDetailsBody.style.display = vis ? "block" : "none";
+  toggleExerciseDetailsBtn.textContent = vis ? "▾" : "▸";
+}
+function setProjectionVisible(vis) {
+  projectionVisible = vis;
+  projectionBody.style.display = vis ? "block" : "none";
+  toggleProjectionBtn.textContent = vis ? "▾" : "▸";
+}
+function setDashboardVisible(vis) {
+  dashboardVisible = vis;
+  dashboardBody.style.display = vis ? "block" : "none";
+  toggleDashboardBtn.textContent = vis ? "▾" : "▸";
+}
+
+// EVENT HANDLERS
+saveSettingsBtn.addEventListener("click", () => {
+  data.settings.startDate = startDateInput.value || null;
+  data.settings.goalWeight = goalWeightInput.value
+    ? parseFloat(goalWeightInput.value)
+    : null;
+  data.settings.eatStart = eatStartInput.value || null;
+  data.settings.eatEnd = eatEndInput.value || null;
+  data.settings.theme = themeSelect.value || "blue";
+  data.settings.timeFormat = timeFormatSelect.value || "auto";
+
+  const suppNames = supplementNamesInput.value
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  data.settings.supplements = suppNames.length ? suppNames : ["Multivitamin"];
+
+  const exNames = exerciseNamesInput.value
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  data.settings.exercises = exNames.length ? exNames : ["Walk"];
+
+  applyTheme(data.settings.theme, false);
+  saveData();
+  renderHeader();
+  renderToday();
+  renderWeighIn();
+  renderDashboard();
+  renderBadges();
+  renderReminders();
+  renderCalendar();
+  alert("Settings saved!");
+});
+
+resetAllBtn.addEventListener("click", () => {
+  if (!confirm("Reset all data? This cannot be undone.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  data = loadData();
+  location.reload();
+});
+
+themeSelect.addEventListener("change", () => {
+  applyTheme(themeSelect.value);
+});
+
+timeFormatSelect.addEventListener("change", () => {
+  data.settings.timeFormat = timeFormatSelect.value || "auto";
+  saveData();
+  renderHeader();
+  renderReminders();
+});
+
+moodRow.addEventListener("click", (e) => {
+  const btn = e.target.closest(".emoji-button");
+  if (!btn) return;
+  ensureDayExists(currentViewKey);
+  const val = parseInt(btn.dataset.value, 10);
+  const entry = data.days[currentViewKey];
+  entry.mood = entry.mood === val ? null : val;
+  saveData();
+  renderWellness();
+  renderBadges();
+  renderDashboard();
+});
+
+energyRow.addEventListener("click", (e) => {
+  const btn = e.target.closest(".emoji-button");
+  if (!btn) return;
+  ensureDayExists(currentViewKey);
+  const val = parseInt(btn.dataset.value, 10);
+  const entry = data.days[currentViewKey];
+  entry.energy = entry.energy === val ? null : val;
+  saveData();
+  renderWellness();
+  renderBadges();
+  renderDashboard();
+});
+
+waterDropletsEl.addEventListener("click", (e) => {
+  const droplet = e.target.closest(".droplet");
+  if (!droplet || !droplet.dataset.value) return;
+  ensureDayExists(currentViewKey);
+  const entry = data.days[currentViewKey];
+  const val = parseInt(droplet.dataset.value, 10);
+  const current = entry.waterCups || 0;
+  entry.waterCups = current === val ? 0 : val;
+  saveData();
+  renderWellness();
+  renderBadges();
+  renderDashboard();
+  renderReminders();
+});
+
+waterInput.addEventListener("change", () => {
+  ensureDayExists(currentViewKey);
+  const entry = data.days[currentViewKey];
+  const val = parseInt(waterInput.value, 10);
+  entry.waterCups = !isNaN(val) && val >= 0 ? val : 0;
+  saveData();
+  renderWellness();
+  renderBadges();
+  renderDashboard();
+  renderReminders();
+});
+
+prevDayBtn.addEventListener("click", () => {
+  changeDay(-1);
+});
+
+nextDayBtn.addEventListener("click", () => {
+  changeDay(1);
+});
+
+todayNoteInput.addEventListener("input", () => {
+  ensureDayExists(currentViewKey);
+  data.days[currentViewKey].note = todayNoteInput.value;
+  saveData();
+});
+
+weeklyWeightInput.addEventListener("change", () => {
+  if (!currentViewIsWeighDay) {
+    weeklyWeightInput.value = "";
+    return;
+  }
+  ensureDayExists(currentViewKey);
+  const val = weeklyWeightInput.value;
+  data.days[currentViewKey].weight = val ? parseFloat(val) : null;
+  saveData();
+  renderWeighIn();
+  renderDashboard();
+  renderBadges();
+});
+
+copyLastWeightBtn.addEventListener("click", () => {
+  if (!currentViewIsWeighDay) return;
+  const lastW = getLastWeighBeforeView();
+  if (lastW != null) {
+    weeklyWeightInput.value = lastW.toFixed(1);
+    ensureDayExists(currentViewKey);
+    data.days[currentViewKey].weight = lastW;
+    saveData();
+    renderWeighIn();
+    renderDashboard();
+    renderBadges();
+  }
+});
+
+resetDayBtn.addEventListener("click", () => {
+  if (!confirm("Reset everything for this day?")) return;
+  ensureDayExists(currentViewKey);
+  data.days[currentViewKey] = {
+    amExercise: false,
+    pmExercise: false,
+    supplementsTaken: {},
+    exercisesDone: {},
+    exerciseMinutes: {},
+    mood: null,
+    energy: null,
+    waterCups: 0,
+    weight: null,
+    note: "",
+  };
+  saveData();
+  renderToday();
+  renderWeighIn();
+  renderDashboard();
+  renderBadges();
+  renderReminders();
+  renderCalendar();
+});
+
+exportBtn.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "fitness_journey_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener("click", () => {
+  importFileInput.click();
+});
+
+importFileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed.settings || !parsed.days || !parsed.weeklyWeights) {
+        throw new Error("Invalid backup file");
+      }
+      if (!parsed.settings.exercises) parsed.settings.exercises = ["Walk"];
+      if (!parsed.settings.timeFormat) parsed.settings.timeFormat = "auto";
+      if (!parsed.settings.theme) parsed.settings.theme = "blue";
+      data = parsed;
+      saveData();
+      alert("Backup imported! Reloading…");
+      location.reload();
+    } catch (err) {
+      alert("Could not import this file. It doesn’t look like a valid backup.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+monthSelect.addEventListener("change", () => {
+  renderCalendar();
+});
+
+calendarGrid.addEventListener("click", (e) => {
+  const cell = e.target.closest(".day-cell");
+  if (!cell || !cell.dataset.key || cell.classList.contains("empty")) return;
+  const key = cell.dataset.key;
+  const dateObj = keyToDate(key);
+  jumpToDate(dateObj);
+});
+
+todayBtn.addEventListener("click", () => {
+  const d = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  jumpToDate(d);
+});
+
+jumpDateInput.addEventListener("change", () => {
+  if (!jumpDateInput.value) return;
+  const [y, m, d] = jumpDateInput.value.split("-").map(Number);
+  if (!y || !m || !d) return;
+  const dateObj = new Date(y, m - 1, d);
+  jumpToDate(dateObj);
+});
+
+dateLabelEl.addEventListener("click", () => {
+  setCalendarVisible(!calendarVisible);
+});
+
+toggleCalendarBtn.addEventListener("click", () => {
+  setCalendarVisible(!calendarVisible);
+});
+toggleWellnessBtn.addEventListener("click", () => {
+  setWellnessVisible(!wellnessVisible);
+});
+toggleExercisesBtn.addEventListener("click", () => {
+  setExercisesVisible(!exercisesVisible);
+});
+toggleSupplementsBtn.addEventListener("click", () => {
+  setSupplementsVisible(!supplementsVisible);
+});
+toggleNotesBtn.addEventListener("click", () => {
+  setNotesVisible(!notesVisible);
+});
+toggleWeighBtn.addEventListener("click", () => {
+  setWeighVisible(!weighVisible);
+});
+toggleAchievementsBtn.addEventListener("click", () => {
+  setAchievementsVisible(!achievementsVisible);
+});
+toggleExerciseDetailsBtn.addEventListener("click", () => {
+  setExerciseDetailsVisible(!exerciseDetailsVisible);
+});
+toggleProjectionBtn.addEventListener("click", () => {
+  setProjectionVisible(!projectionVisible);
+});
+toggleDashboardBtn.addEventListener("click", () => {
+  setDashboardVisible(!dashboardVisible);
+});
+
+// INITIAL RENDER
+applyTheme(data.settings.theme || "blue", false);
+renderSettings();
+renderHeader();
+renderToday();
+renderWeighIn();
+renderBadges();
+renderDashboard();
+renderReminders();
+renderCalendar();
+updateDayNavButtons();
+
+setCalendarVisible(true);
+setWellnessVisible(true);
+setExercisesVisible(true);
+setSupplementsVisible(true);
+setNotesVisible(true);
+setWeighVisible(true);
+setAchievementsVisible(true);
+setExerciseDetailsVisible(true);
+setProjectionVisible(true);
+setDashboardVisible(true);
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js").catch(console.error);
+    });
+  }
+</script>
+
+</body>
+</html>
